@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  GithubConnectionName:
+    Type: String
+    Default: github
+  GlobalRepoName:
+    Type: String
+    Default: "sharkdad/aws-pipeline-examples"
+  GlobalRepoBranch:
+    Type: String
+    Default: main
+  GlobalCFTemplateFile:
+    Type: String
+    Default: "global-pipeline-template.yml"
+Resources:
+  PipelineRole:
+    Type : "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+                - cloudformation.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
+  ArtifactsBucket:
+    Type: "AWS::S3::Bucket"
+  GithubConnection:
+    Type: "AWS::CodeStarConnections::Connection"
+    Properties:
+      ConnectionName: !Ref GithubConnectionName
+      ProviderType: GitHub
+  GlobalPipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties: 
+      ArtifactStore: 
+        Type: S3
+        Location: !Ref ArtifactsBucket
+      RoleArn: !GetAtt PipelineRole.Arn
+      Stages:
+        -
+          Name: Source
+          Actions:
+          -
+            Name: Source
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Version: 1
+              Provider: CodeStarSourceConnection
+            OutputArtifacts:
+            - Name: SourceArtifact
+            Configuration:
+              ConnectionArn: !Ref GithubConnection
+              FullRepositoryId: !Ref GlobalRepoName
+              BranchName: !Ref GlobalRepoBranch
+        -
+          Name: Global
+          Actions:
+            -
+              RunOrder: 1
+              Name: CreateChangeSet
+              InputArtifacts:
+                -
+                  Name: SourceArtifact
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                StackName: !Ref "AWS::StackName"
+                Capabilities: CAPABILITY_IAM
+                ChangeSetName: "pipeline-#{codepipeline.PipelineExecutionId}"
+                RoleArn: !GetAtt PipelineRole.Arn
+                TemplatePath: !Sub "SourceArtifact::${GlobalCFTemplateFile}"
