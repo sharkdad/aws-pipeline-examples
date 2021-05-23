@@ -81,3 +81,27 @@ Resources:
                 ChangeSetName: "pipeline-#{codepipeline.PipelineExecutionId}"
                 RoleArn: !GetAtt PipelineRole.Arn
                 TemplatePath: !Sub "SourceArtifact::${GlobalCFTemplateFile}"
+            -
+              RunOrder: 2
+              Name: ApproveChangeSet
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              Configuration:
+                CustomData: "Approve change set pipeline-#{codepipeline.PipelineExecutionId}"
+            -
+              RunOrder: 3
+              Name: ExecuteChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                StackName: !Ref "AWS::StackName"
+                Capabilities: CAPABILITY_IAM
+                ChangeSetName: "pipeline-#{codepipeline.PipelineExecutionId}"
+                RoleArn: !GetAtt PipelineRole.Arn
