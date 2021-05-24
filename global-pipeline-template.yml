@@ -13,6 +13,15 @@ Parameters:
     Type: String
     Default: "global-pipeline-template.yml"
 Resources:
+  GithubConnection:
+    Type: "AWS::CodeStarConnections::Connection"
+    Properties:
+      ConnectionName: !Ref GithubConnectionName
+      ProviderType: GitHub
+  ArtifactsBucket:
+    Type: "AWS::S3::Bucket"
+  TestBucket:
+    Type: "AWS::S3::Bucket"
   PipelineRole:
     Type : "AWS::IAM::Role"
     Properties:
@@ -29,13 +38,6 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
-  ArtifactsBucket:
-    Type: "AWS::S3::Bucket"
-  GithubConnection:
-    Type: "AWS::CodeStarConnections::Connection"
-    Properties:
-      ConnectionName: !Ref GithubConnectionName
-      ProviderType: GitHub
   GlobalPipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties: 
