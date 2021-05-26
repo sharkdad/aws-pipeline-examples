@@ -5,7 +5,7 @@ Parameters:
     Default: github
   RootRepoName:
     Type: String
-    Default: "sharkdad/aws-iac-examples"
+    Default: "sharkdad/aws-pipeline-examples"
   RootRepoBranch:
     Type: String
     Default: main
