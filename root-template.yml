@@ -3,15 +3,15 @@ Parameters:
   GithubConnectionName:
     Type: String
     Default: github
-  GlobalRepoName:
+  RootRepoName:
     Type: String
-    Default: "sharkdad/aws-pipeline-examples"
-  GlobalRepoBranch:
+    Default: "sharkdad/aws-iac-examples"
+  RootRepoBranch:
     Type: String
     Default: main
-  GlobalCFTemplateFile:
+  RootCFTemplateFile:
     Type: String
-    Default: "global-pipeline-template.yml"
+    Default: "root-template.yml"
 Resources:
   GithubConnection:
     Type: "AWS::CodeStarConnections::Connection"
@@ -38,7 +38,7 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
-  GlobalPipeline:
+  RootPipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties: 
       ArtifactStore: 
@@ -60,10 +60,10 @@ Resources:
             - Name: SourceArtifact
             Configuration:
               ConnectionArn: !Ref GithubConnection
-              FullRepositoryId: !Ref GlobalRepoName
-              BranchName: !Ref GlobalRepoBranch
+              FullRepositoryId: !Ref RootRepoName
+              BranchName: !Ref RootRepoBranch
         -
-          Name: Global
+          Name: Root
           Actions:
             -
               RunOrder: 1
@@ -82,7 +82,7 @@ Resources:
                 Capabilities: CAPABILITY_IAM
                 ChangeSetName: "pipeline-#{codepipeline.PipelineExecutionId}"
                 RoleArn: !GetAtt PipelineRole.Arn
-                TemplatePath: !Sub "SourceArtifact::${GlobalCFTemplateFile}"
+                TemplatePath: !Sub "SourceArtifact::${RootCFTemplateFile}"
             -
               RunOrder: 2
               Name: ApproveChangeSet
