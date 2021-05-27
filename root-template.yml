@@ -20,6 +20,8 @@ Resources:
       ProviderType: GitHub
   ArtifactsBucket:
     Type: "AWS::S3::Bucket"
+  TestBucket:
+    Type: "AWS::S3::Bucket"
   PipelineRole:
     Type : "AWS::IAM::Role"
     Properties:
